@@ -1,0 +1,21 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Main</title>
+    <link rel="stylesheet" href="patternfly-css/patternfly.min.css">
+    <script src="main.min.js"></script>
+  </head>
+
+  <body>
+    <div id="myapp"></div>
+    <script>
+      var app = Elm.Main.init({
+          node: document.getElementById('myapp')
+      });
+
+      app.ports.consoleLog.subscribe(function(message) {
+          console.log(message);
+      });
+    </script>
+  </body>
+</html>

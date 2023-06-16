@@ -1,0 +1,7 @@
+result
+.direnv
+.envrc
+elm-stuff/
+
+public/main*.js
+public/patternfly-css
