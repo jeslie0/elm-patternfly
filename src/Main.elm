@@ -1,7 +1,7 @@
 port module Main exposing (..)
 
 import Browser
-import Components.Button exposing (..)
+import Components.Accordion exposing (..)
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
@@ -91,17 +91,14 @@ view : Model -> Html Msg
 view model =
     H.div
         []
-        [ H.button [ HA.classList [ ( "pf-c-button", True ), ( "pf-m-primary", True ) ] ] [ H.text "Primary" ]
-        , (button
-            |> withVariant Primary
-            |> (withIsLoading <| Just model.isLoading)
-            |> withBadgeCount (Just { className = "", count = 7, isRead = True })
-            |> withComponent (\attributes children -> H.a (HA.href "http://elm-lang.org" :: attributes) children)
-            |> withIsActive True
+        [ (default
+            |> withBorder True
+            |> withListType DefinitionList
+            |> withDisplaySize Large
             |> toHtml
           )
-            [ HE.onClick Foo ]
-            [ H.text model.text ]
+            []
+            [ H.text "foo" ]
         ]
 
 

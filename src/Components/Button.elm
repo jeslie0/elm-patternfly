@@ -1,6 +1,7 @@
 module Components.Button exposing
-    ( Builder, button
+    ( Builder, default
     , Variant(..), withVariant
+    , withClassName
     , withIsDisabled
     , ButtonSize(..), withButtonSize
     , withIsBlock
@@ -21,7 +22,7 @@ like another page inside of a web application, or an external site
 such as help or documentation.
 
 This component corresponds to Patternfly's Button component, whose
-details can be found [here](https://www.patternfly.org/v4/components/button/).
+details can be found (here)[<https://www.patternfly.org/v4/components/button/>][https://www.patternfly.org/v4/components/button/].
 
 
 # Builder and options
@@ -29,12 +30,17 @@ details can be found [here](https://www.patternfly.org/v4/components/button/).
 We expose the opaque type `Builder` and follow the "builder pipeline"
 style of customising the Patternfly HTML elements.
 
-@docs Builder, button
+@docs Builder, default
 
 
 # Variants
 
 @docs Variant, withVariant
+
+
+# Class name
+
+@docs withClassName
 
 
 # Disabled buttons
@@ -96,7 +102,7 @@ type Builder msg
 {-| Configurable properties for building a Patternfly button.
 -}
 type alias Options msg =
-    { className : String -- DONE
+    { className : Maybe String -- DONE
     , component :
         List (Attribute msg)
         -> List (Html msg)
@@ -117,7 +123,7 @@ type alias Options msg =
 -}
 defaultOptions : Options msg
 defaultOptions =
-    { className = ""
+    { className = Nothing
     , component = H.button
     , buttonType = Button
     , countOptions = Nothing
@@ -134,8 +140,8 @@ defaultOptions =
 {-| The default button builder. This should be the start of a builder
 pipeline.
 -}
-button : Builder msg
-button =
+default : Builder msg
+default =
     Builder defaultOptions
 
 
@@ -148,6 +154,18 @@ button =
 -- , inoperableEvents : List String
 -- , ouiaId : OuiaId
 -- , ouiaSafe : OuiaSafe
+-- * Class Name
+
+
+{-| The button can be given a custom class name by passing in a className
+string.
+-}
+withClassName : Maybe String -> Builder msg -> Builder msg
+withClassName mString (Builder opts) =
+    Builder { opts | className = mString }
+
+
+
 -- * Button type
 
 
@@ -208,7 +226,8 @@ isActiveToTuple isActive =
 
 {-| A button can be styled as "active" by using the `withIsActive`
 pipeline builder. By default, the active style is applied to
-Patternfly when they are hovered over or clicked on. -}
+Patternfly when they are hovered over or clicked on.
+-}
 withIsActive : Bool -> Builder msg -> Builder msg
 withIsActive bool (Builder opt) =
     Builder { opt | isActive = bool }
@@ -443,6 +462,7 @@ assigned using the `withVariant` function.
 The variants allow styleing where appropriate. For instance, only the
 `Secondary` and `Link` styles admit a "danger" style, hence they are
 the only ones that admit that option.
+
 -}
 type Variant
     = Primary
@@ -512,7 +532,12 @@ toClass (Builder opts) =
             ( "pf-c-button", True )
 
         className =
-            ( opts.className, not (opts.className == "") )
+            case opts.className of
+                Nothing ->
+                    ( "", False )
+
+                Just name ->
+                    ( name, True )
 
         isActive =
             isActiveToTuple opts.isActive
@@ -539,7 +564,7 @@ toClass (Builder opts) =
                 Just var ->
                     variantToTuple var
     in
-    [ pfButton, className, isActive, isBlock, isLoading, size, variant ]
+    [ pfButton, isActive, isBlock, isLoading, size, variant, className  ]
 
 
 toAttributes : Builder msg -> List (Attribute msg)
@@ -569,7 +594,7 @@ makeChildren (Builder opts) htmls =
 the end of your pipeline to get a useable button.
 -}
 toHtml : Builder msg -> List (Attribute msg) -> List (Html msg) -> Html msg
-toHtml ((Builder opts) as builder) =
+toHtml (Builder opts as builder) =
     \attributes children ->
         opts.component
             (attributes ++ ((classList <| toClass builder) :: toAttributes builder))
