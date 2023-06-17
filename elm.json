@@ -1,9 +1,10 @@
 {
     "type": "application",
-    "name": "jeslie0/patternfly",
+    "name": "jeslie0/elm-patternfly",
     "source-directories": [
         "src"
     ],
+    "license": "MIT",
     "exposed-modules": [ "Components.Button"],
     "elm-version": "0.19.1",
     "dependencies": {
