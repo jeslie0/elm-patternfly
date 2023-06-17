@@ -96,7 +96,8 @@ view model =
             |> withVariant Primary
             |> (withIsLoading <| Just model.isLoading)
             |> withBadgeCount (Just { className = "", count = 7, isRead = True })
-            |> withIsDisabled True
+            |> withComponent (\attributes children -> H.a (HA.href "http://elm-lang.org" :: attributes) children)
+            |> withIsActive True
             |> toHtml
           )
             [ HE.onClick Foo ]
