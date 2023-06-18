@@ -5,7 +5,12 @@
         "src"
     ],
     "license": "MIT",
-    "exposed-modules": [ "Components.Button", "Components.Accordion"],
+    "exposed-modules":
+    [ "Components.Button"
+        , "Components.Accordion"
+        , "Components.Accordion.Item"
+        , "Components.Accordion.Content"
+    ],
     "elm-version": "0.19.1",
     "dependencies": {
         "direct": {

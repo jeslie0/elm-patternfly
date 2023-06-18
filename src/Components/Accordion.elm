@@ -118,7 +118,7 @@ withListType listType (Builder opts) =
 -- * Classname
 
 
-{-| The button can be given a custom class name by passing in a className
+{-| The accordion can be given a custom class name by passing in a className
 string.
 -}
 withClassName : Maybe String -> Builder msg -> Builder msg
@@ -274,4 +274,4 @@ toHtml ((Builder opts) as builder) =
         in
         mainComponent
             (attributes ++ [ classList <| toClasses builder ])
-            updatedChildren
+            children

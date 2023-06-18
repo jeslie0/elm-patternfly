@@ -1,7 +1,10 @@
 port module Main exposing (..)
 
 import Browser
-import Components.Accordion exposing (..)
+import Components.Accordion as A
+import Components.Accordion.Content as AC
+import Components.Accordion.Item exposing (..)
+import Components.Accordion.Toggle as AT
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
@@ -91,14 +94,30 @@ view : Model -> Html Msg
 view model =
     H.div
         []
-        [ (default
-            |> withBorder True
-            |> withListType DefinitionList
-            |> withDisplaySize Large
-            |> toHtml
+        [ (A.default
+            |> A.withBorder True
+            |> A.withListType A.Div
+            |> A.withDisplaySize A.Large
+            |> A.toHtml
           )
-            []
-            [ H.text "foo" ]
+            [ HE.onClick Foo ]
+            [ accordionItem
+                [ H.h3 []
+                    [ (AT.default "foo"
+                        |> AT.withExpanded (not model.isLoading)
+                        |> AT.toHtml
+                      )
+                        []
+                        [ H.text "Item five" ]
+                    ]
+                , (AC.default
+                    |> AC.withHidden model.isLoading
+                    |> AC.toHtml
+                  )
+                    []
+                    [ H.p [] [ H.text "Vivamus finibus dictum ex id ultrices. Mauris dictum neque a iaculis blandit." ] ]
+                ]
+            ]
         ]
 
 
