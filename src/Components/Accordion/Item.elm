@@ -1,9 +1,11 @@
 module Components.Accordion.Item exposing
     ( Builder
+    , Options
     , default
     , toHtml
     , withContent
     , withToggle
+    , withHeadingLevel
     )
 
 {-| For use as children of accordions.
@@ -17,6 +19,7 @@ module Components.Accordion.Item exposing
 
 import Components.Accordion.Content as AccordionContent
 import Components.Accordion.Toggle as AccordionToggle
+import Components.Accordion.Types exposing (HeadingLevel(..))
 import Html exposing (Attribute, Html, div)
 
 
@@ -52,8 +55,15 @@ withContent content (Builder opts) =
     Builder { opts | content = content }
 
 
-toHtml : Builder msg -> List (Html msg)
-toHtml (Builder opts) =
+withHeadingLevel : HeadingLevel -> Options msg -> Options msg
+withHeadingLevel level opts =
+        { toggle = AccordionToggle.withHeadingLevel level opts.toggle
+        , content = AccordionContent.withHeadingLevel level opts.content
+        }
+
+
+toHtml : Options msg -> List (Html msg)
+toHtml opts =
     [ AccordionToggle.toHtml opts.toggle
     , AccordionContent.toHtml opts.content
     ]

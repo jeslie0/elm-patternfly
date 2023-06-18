@@ -6,7 +6,7 @@ module Components.Accordion.Content exposing
     , withFixed
     , withHidden
     , toHtml
-    , setAttributes, setChildren, withAttribute, withChild
+    , setAttributes, setChildren, withAttribute, withChild, withHeadingLevel
     )
 
 {-| The content of an accordion item.
@@ -48,7 +48,7 @@ module Components.Accordion.Content exposing
 
 -}
 
-import Components.Accordion.Types exposing (ListType(..))
+import Components.Accordion.Types exposing (HeadingLevel(..))
 import Html as H exposing (Attribute, Html, div)
 import Html.Attributes exposing (attribute, class, classList, disabled, type_)
 
@@ -65,7 +65,7 @@ type alias Options msg =
     , isCustomContent : Bool
     , isFixed : Bool
     , isHidden : Bool
-    , listType : ListType
+    , headingLevel : HeadingLevel
     , children : List (Html msg)
     , attributes : List (Attribute msg)
     }
@@ -78,7 +78,7 @@ defaultOptions =
     , isCustomContent = False
     , isFixed = False
     , isHidden = False
-    , listType = DefinitionList
+    , headingLevel = DefinitionList
     , children = []
     , attributes = []
     }
@@ -152,6 +152,15 @@ withHidden bool (Builder opts) =
 
 
 
+-- * HeadingLevel
+
+
+withHeadingLevel : HeadingLevel -> Builder msg -> Builder msg
+withHeadingLevel level (Builder opts) =
+    Builder { opts | headingLevel = level }
+
+
+
 -- * Children
 
 
@@ -207,8 +216,8 @@ toWrapperClasses (Builder opts) =
     [ accordionContent, expanded, fixed ]
 
 
-toAttributes : Builder msg -> List (Attribute msg)
-toAttributes (Builder opts) =
+toWrapperAttributes : Builder msg -> List (Attribute msg)
+toWrapperAttributes (Builder opts) =
     let
         hidden =
             if opts.isHidden then
@@ -235,15 +244,12 @@ toHtml ((Builder opts) as builder) =
         classes =
             classList <| toClasses builder
 
-        attr =
-            toAttributes builder
-
         wrapper =
-            case opts.listType of
+            case opts.headingLevel of
                 DefinitionList ->
-                    H.dd [ classList <| toWrapperClasses builder ]
+                    H.dd ((classList <| toWrapperClasses builder) :: toWrapperAttributes builder)
 
-                Div ->
-                    H.div [ classList <| toWrapperClasses builder ]
+                _ ->
+                    H.div ((classList <| toWrapperClasses builder) :: toWrapperAttributes builder)
     in
-    wrapper [ component (attributes ++ classes :: attr) opts.children ]
+    wrapper [ component (attributes ++ [ classes ]) opts.children ]

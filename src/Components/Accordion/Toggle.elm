@@ -1,6 +1,18 @@
-module Components.Accordion.Toggle exposing (Builder, default, setChildren, toHtml, withChild, withClassName, withComponent, withExpanded, withAttribute, setAttributes)
+module Components.Accordion.Toggle exposing
+    ( Builder
+    , default
+    , setAttributes
+    , setChildren
+    , toHtml
+    , withAttribute
+    , withChild
+    , withClassName
+    , withComponent
+    , withExpanded
+    , withHeadingLevel
+    )
 
-import Components.Accordion.Types exposing (ListType(..))
+import Components.Accordion.Types exposing (HeadingLevel(..))
 import Html as H exposing (Attribute, Html, button)
 import Html.Attributes exposing (attribute, class, classList, disabled, type_)
 
@@ -19,7 +31,7 @@ type alias Options msg =
         -> List (Html msg)
         -> Html msg
     , isExpanded : Bool
-    , listType : ListType
+    , headingLevel : HeadingLevel
     , children : List (Html msg)
     , attributes : List (Attribute msg)
     }
@@ -31,7 +43,7 @@ defaultOptions id =
     , id = id
     , component = button
     , isExpanded = False
-    , listType = DefinitionList
+    , headingLevel = DefinitionList
     , children = []
     , attributes = []
     }
@@ -75,6 +87,15 @@ withComponent comp (Builder opts) =
 withExpanded : Bool -> Builder msg -> Builder msg
 withExpanded bool (Builder opts) =
     Builder { opts | isExpanded = bool }
+
+
+
+-- * Heading Level
+
+
+withHeadingLevel : HeadingLevel -> Builder msg -> Builder msg
+withHeadingLevel level (Builder opts) =
+    Builder { opts | headingLevel = level }
 
 
 
@@ -126,6 +147,31 @@ toAttributes =
     [ type_ "button" ]
 
 
+headingLevelToComponent : HeadingLevel -> List (Html msg) -> Html msg
+headingLevelToComponent level =
+    case level of
+        H1 ->
+            H.h1 []
+
+        H2 ->
+            H.h2 []
+
+        H3 ->
+            H.h3 []
+
+        H4 ->
+            H.h4 []
+
+        H5 ->
+            H.h5 []
+
+        H6 ->
+            H.h6 []
+
+        DefinitionList ->
+            H.dt []
+
+
 toHtml : Builder msg -> Html msg
 toHtml ((Builder opts) as builder) =
     let
@@ -147,11 +193,6 @@ toHtml ((Builder opts) as builder) =
             ]
 
         wrapper =
-            case opts.listType of
-                DefinitionList ->
-                    H.dt []
-
-                Div ->
-                    H.h3 []
+            headingLevelToComponent opts.headingLevel
     in
     wrapper [ component (attributes ++ classes :: attrs) updatedChildren ]

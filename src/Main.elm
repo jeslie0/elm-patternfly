@@ -3,10 +3,9 @@ port module Main exposing (..)
 import Browser
 import Components.Accordion as Accordion
 import Components.Accordion.Content as AccordionContent
-import Components.Accordion.Item as AccordionItem
 import Components.Accordion.Toggle as AccordionToggle
+import Components.Accordion.Types exposing (..)
 import Html as H exposing (Html)
-import Html.Attributes as HA
 import Html.Events as HE
 import List exposing (..)
 
@@ -94,56 +93,29 @@ view : Model -> Html Msg
 view model =
     H.div
         [ HE.onClick Foo ]
-        [ (Accordion.default
+        [ Accordion.default
             |> Accordion.withAccordionItem
-                (AccordionItem.default "foo"
-                    |> (AccordionItem.withToggle <|
-                            (AccordionToggle.default "loo"
-                                |> AccordionToggle.withExpanded (not model.isLoading)
-                                |> AccordionToggle.withChild (H.text "Item one")
-                            )
-                       )
-                    |> (AccordionItem.withContent <|
-                            (AccordionContent.default
-                                |> AccordionContent.withHidden model.isLoading
-                                |> AccordionContent.withChild (H.p [] [ H.text "Body content!" ])
-                            )
-                       )
-                )
-            |> Accordion.toHtml
-          )
-            []
-        , (Accordion.default
+                { toggle =
+                    AccordionToggle.default "foo"
+                        |> AccordionToggle.withExpanded (not model.isLoading)
+                        |> AccordionToggle.withChild (H.text "Item one")
+                , content =
+                    AccordionContent.default
+                        |> AccordionContent.withHidden model.isLoading
+                        |> AccordionContent.withChild (H.p [] [ H.text "Body content!" ])
+                }
             |> Accordion.withAccordionItem
-                (AccordionItem.default "foo"
-                    |> (AccordionItem.withToggle <|
-                            (AccordionToggle.default "loo"
-                                |> AccordionToggle.withExpanded (model.isLoading)
-                                |> AccordionToggle.withChild (H.text "Item Two")
-                            )
-                       )
-                    |> (AccordionItem.withContent <|
-                            (AccordionContent.default
-                                |> AccordionContent.withHidden (not model.isLoading)
-                                |> AccordionContent.withChild (H.p [] [ H.text "Body content!" ])
-                            )
-                       )
-                )
+                { toggle =
+                    AccordionToggle.default "bar"
+                        |> AccordionToggle.withExpanded (model.isLoading)
+                        |> AccordionToggle.withChild (H.text "Item two")
+                , content =
+                    AccordionContent.default
+                        |> AccordionContent.withHidden (not model.isLoading)
+                        |> AccordionContent.withChild (H.p [] [ H.text "Body content!" ])
+                }
+
+            |> Accordion.withHeadingLevel H1
             |> Accordion.toHtml
-          )
-            []
         ]
 
-
-type Button
-    = Button String String
-
-
-reverse : List a -> List a
-reverse list =
-    case list of
-        [] ->
-            []
-
-        x :: xs ->
-            reverse xs ++ [ x ]

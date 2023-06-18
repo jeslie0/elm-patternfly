@@ -3,6 +3,19 @@ module Components.Accordion.Types exposing (..)
 {-| The list type - either a `DefinitionList` or a `Div`. Information
 about definition lists can be found [here](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dl).
 -}
-type ListType
-    = DefinitionList
-    | Div
+
+
+
+-- * Heading level
+
+
+{-| Each heading level corresponds to a HTML heading level.
+-}
+type HeadingLevel
+    = H1
+    | H2
+    | H3
+    | H4
+    | H5
+    | H6
+    | DefinitionList
