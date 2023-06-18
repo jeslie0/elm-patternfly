@@ -4,8 +4,8 @@ module Components.Accordion.Item exposing
     , default
     , toHtml
     , withContent
-    , withToggle
     , withHeadingLevel
+    , withToggle
     )
 
 {-| For use as children of accordions.
@@ -28,42 +28,65 @@ type Builder msg
 
 
 type alias Options msg =
-    { toggle : AccordionToggle.Builder msg
-    , content : AccordionContent.Builder msg
+    { toggle : Maybe (AccordionToggle.Builder msg)
+    , content : Maybe (AccordionContent.Builder msg)
+    , contentUnfoldsBelow : Bool
     }
 
 
-defaultOptions : String -> Options msg
-defaultOptions id =
-    { toggle = AccordionToggle.default id
-    , content = AccordionContent.default
+defaultOptions : Options msg
+defaultOptions =
+    { toggle = Nothing
+    , content = Nothing
+    , contentUnfoldsBelow = True
     }
 
 
-default : String -> Builder msg
-default id =
-    Builder (defaultOptions id)
+default : Builder msg
+default =
+    Builder defaultOptions
 
 
-withToggle : AccordionToggle.Builder msg -> Builder msg -> Builder msg
+withToggle : (AccordionToggle.Builder msg) -> Builder msg -> Builder msg
 withToggle toggle (Builder opts) =
-    Builder { opts | toggle = toggle }
+    Builder { opts | toggle = Just toggle }
 
 
-withContent : AccordionContent.Builder msg -> Builder msg -> Builder msg
+withContent : (AccordionContent.Builder msg) -> Builder msg -> Builder msg
 withContent content (Builder opts) =
-    Builder { opts | content = content }
+    Builder { opts | content = Just content }
 
 
-withHeadingLevel : HeadingLevel -> Options msg -> Options msg
-withHeadingLevel level opts =
-        { toggle = AccordionToggle.withHeadingLevel level opts.toggle
-        , content = AccordionContent.withHeadingLevel level opts.content
+withHeadingLevel : HeadingLevel -> Builder msg -> Builder msg
+withHeadingLevel level (Builder opts) =
+    Builder
+        { opts
+            | toggle = Maybe.map (\toggle -> AccordionToggle.withHeadingLevel level toggle) opts.toggle
+            , content = Maybe.map (\content -> AccordionContent.withHeadingLevel level content) opts.content
         }
 
 
-toHtml : Options msg -> List (Html msg)
-toHtml opts =
-    [ AccordionToggle.toHtml opts.toggle
-    , AccordionContent.toHtml opts.content
-    ]
+toHtml : Builder msg -> List (Html msg)
+toHtml (Builder opts) =
+    let
+        toggle =
+            case opts.toggle of
+                Just builder ->
+                    [ AccordionToggle.toHtml builder ]
+
+                Nothing ->
+                    []
+
+        content =
+            case opts.content of
+                Just builder ->
+                    [ AccordionContent.toHtml builder ]
+
+                Nothing ->
+                    []
+    in
+    if opts.contentUnfoldsBelow then
+        toggle ++ content
+
+    else
+        content ++ toggle

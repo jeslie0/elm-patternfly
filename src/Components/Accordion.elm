@@ -74,7 +74,7 @@ type alias Options msg =
     , displaySize : DisplaySize
     , headingLevel : HeadingLevel
     , isBordered : Bool
-    , accordionItems : List (AccordionItem.Options msg)
+    , accordionItems : List (AccordionItem.Builder msg)
     , attributes : List (Attribute msg)
     }
 
@@ -83,7 +83,7 @@ defaultOptions : Options msg
 defaultOptions =
     { className = Nothing
     , displaySize = Default
-    , headingLevel = H3
+    , headingLevel = DefinitionList
     , isBordered = False
     , accordionItems = []
     , attributes = []
@@ -132,11 +132,7 @@ withDisplaySize disp (Builder opts) =
 -}
 withHeadingLevel : HeadingLevel -> Builder msg -> Builder msg
 withHeadingLevel level (Builder opts) =
-    Builder
-        { opts
-            | headingLevel = level
-            , accordionItems = List.map (\item -> AccordionItem.withHeadingLevel level item) opts.accordionItems
-        }
+    Builder { opts | headingLevel = level }
 
 
 
@@ -157,14 +153,14 @@ withBorder bool (Builder opts) =
 {-| Add an accordion item to the already existing accordion
 items.
 -}
-withAccordionItem : AccordionItem.Options msg -> Builder msg -> Builder msg
+withAccordionItem : AccordionItem.Builder msg -> Builder msg -> Builder msg
 withAccordionItem options (Builder opts) =
     Builder { opts | accordionItems = options :: opts.accordionItems }
 
 
 {-| Completely override and set the accordion items in the Builder.
 -}
-setAccordionItems : List (AccordionItem.Options msg) -> Builder msg -> Builder msg
+setAccordionItems : List (AccordionItem.Builder msg) -> Builder msg -> Builder msg
 setAccordionItems items (Builder opts) =
     Builder { opts | accordionItems = items }
 
@@ -185,12 +181,6 @@ setAttributes attrs (Builder opts) =
 
 
 -- * To HTML
-
-
-type alias AccordionComponent msg =
-    { mainHtml : List (Attribute msg) -> List (Html msg) -> Html msg
-    , childHtml : List (Attribute msg) -> List (Html msg) -> Html msg
-    }
 
 
 toComponent : Builder msg -> List (Attribute msg) -> List (Html msg) -> Html msg
@@ -249,4 +239,4 @@ toHtml ((Builder opts) as builder) =
     in
     component
         (attributes ++ [ classList <| toClasses builder ])
-         (List.concatMap AccordionItem.toHtml (List.reverse opts.accordionItems))
+        (List.concatMap (AccordionItem.toHtml << AccordionItem.withHeadingLevel opts.headingLevel) (List.reverse opts.accordionItems))
