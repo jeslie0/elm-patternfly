@@ -14,7 +14,7 @@ progressive disclosure to help reduce page scrolling, by allowing
 users to choose whether they want to show or hide more detailed
 information as needed.
 
-This is based on the React-Patternfly accordian. For more information,
+This is based on the Patternfly-React accordian. For more information,
 see [here](https://www.patternfly.org/v4/components/accordion).
 
 

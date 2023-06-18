@@ -1,6 +1,6 @@
 {
     "type": "application",
-    "name": "jeslie0/elm-patternfly",
+    "name": "jeslie0/patternfly-elm",
     "source-directories": [
         "src"
     ],
