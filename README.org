@@ -1,7 +1,7 @@
 #+title: jeslie0/elm-patternfly
 * [2/90] [2%] List of "components"
 ** TODO About modal
-** INPROGRESS Accordion
+** DONE Accordion
 Need to do both Accordion Items and tabs
 ** TODO Action list
 ** TODO Alert

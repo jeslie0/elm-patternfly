@@ -15,6 +15,7 @@ module Components.Accordion.Toggle exposing
 import Components.Accordion.Types exposing (HeadingLevel(..))
 import Html as H exposing (Attribute, Html, button)
 import Html.Attributes exposing (attribute, class, classList, disabled, type_)
+import Icons.AngleRight exposing (angleRight)
 
 
 {-| Opaque builder type used to build a pipeline around.
@@ -189,7 +190,8 @@ toHtml ((Builder opts) as builder) =
 
         updatedChildren =
             [ H.span [ class "pf-c-accordion__toggle-text" ] opts.children
-            , H.span [ class "pf-c-accordion__toggle-icon" ] []
+            , H.span [ class "pf-c-accordion__toggle-icon" ]
+                [ angleRight ]
             ]
 
         wrapper =
