@@ -14,7 +14,7 @@ module Components.Accordion.Toggle exposing
 
 import Components.Accordion.Types exposing (HeadingLevel(..))
 import Html as H exposing (Attribute, Html, button)
-import Html.Attributes exposing (attribute, class, classList, disabled, type_)
+import Html.Attributes exposing (class, classList, type_)
 import Icons.AngleRight exposing (angleRight)
 
 

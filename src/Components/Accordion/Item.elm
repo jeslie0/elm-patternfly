@@ -20,7 +20,7 @@ module Components.Accordion.Item exposing
 import Components.Accordion.Content as AccordionContent
 import Components.Accordion.Toggle as AccordionToggle
 import Components.Accordion.Types exposing (HeadingLevel(..))
-import Html exposing (Attribute, Html, div)
+import Html exposing (Html)
 
 
 type Builder msg

@@ -1,4 +1,4 @@
-module Components.Accordion.Types exposing (..)
+module Components.Accordion.Types exposing (HeadingLevel(..))
 
 {-| The list type - either a `DefinitionList` or a `Div`. Information
 about definition lists can be found [here](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dl).

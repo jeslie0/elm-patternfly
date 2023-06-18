@@ -50,7 +50,7 @@ module Components.Accordion.Content exposing
 
 import Components.Accordion.Types exposing (HeadingLevel(..))
 import Html as H exposing (Attribute, Html, div)
-import Html.Attributes exposing (attribute, class, classList, disabled, type_)
+import Html.Attributes exposing (attribute, classList)
 
 
 {-| Opaque builder type used to build a pipeline around.

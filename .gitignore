@@ -3,5 +3,5 @@ result
 .envrc
 elm-stuff/
 
-public/main*.js
-public/patternfly-css
+examples/public/main*.js
+examples/public/patternfly-css*

@@ -58,7 +58,7 @@ see [here](https://www.patternfly.org/v4/components/accordion).
 -}
 
 import Components.Accordion.Item as AccordionItem
-import Components.Accordion.Types exposing (..)
+import Components.Accordion.Types exposing (HeadingLevel(..))
 import Html as H exposing (Attribute, Html)
 import Html.Attributes exposing (classList)
 
