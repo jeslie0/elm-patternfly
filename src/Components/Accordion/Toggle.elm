@@ -1,5 +1,6 @@
-module Components.Accordion.Toggle exposing (Builder, default, toHtml, withClassName, withComponent, withExpanded)
+module Components.Accordion.Toggle exposing (Builder, default, setChildren, toHtml, withChild, withClassName, withComponent, withExpanded, withAttribute, setAttributes)
 
+import Components.Accordion.Types exposing (ListType(..))
 import Html as H exposing (Attribute, Html, button)
 import Html.Attributes exposing (attribute, class, classList, disabled, type_)
 
@@ -18,6 +19,9 @@ type alias Options msg =
         -> List (Html msg)
         -> Html msg
     , isExpanded : Bool
+    , listType : ListType
+    , children : List (Html msg)
+    , attributes : List (Attribute msg)
     }
 
 
@@ -27,6 +31,9 @@ defaultOptions id =
     , id = id
     , component = button
     , isExpanded = False
+    , listType = DefinitionList
+    , children = []
+    , attributes = []
     }
 
 
@@ -71,6 +78,34 @@ withExpanded bool (Builder opts) =
 
 
 
+-- * Children
+
+
+withChild : Html msg -> Builder msg -> Builder msg
+withChild html (Builder opts) =
+    Builder { opts | children = html :: opts.children }
+
+
+setChildren : List (Html msg) -> Builder msg -> Builder msg
+setChildren htmls (Builder opts) =
+    Builder { opts | children = htmls }
+
+
+
+-- * Attributes
+
+
+withAttribute : Attribute msg -> Builder msg -> Builder msg
+withAttribute attr (Builder opts) =
+    Builder { opts | attributes = attr :: opts.attributes }
+
+
+setAttributes : List (Attribute msg) -> Builder msg -> Builder msg
+setAttributes attrs (Builder opts) =
+    Builder { opts | attributes = attrs }
+
+
+
 -- * To HTML
 
 
@@ -91,22 +126,32 @@ toAttributes =
     [ type_ "button" ]
 
 
-toHtml : Builder msg -> List (Attribute msg) -> List (Html msg) -> Html msg
+toHtml : Builder msg -> Html msg
 toHtml ((Builder opts) as builder) =
-    \attributes children ->
-        let
-            component =
-                opts.component
+    let
+        attributes =
+            opts.attributes
 
-            classes =
-                classList <| toClasses builder
+        component =
+            opts.component
 
-            attrs =
-                toAttributes
+        classes =
+            classList <| toClasses builder
 
-            updatedChildren =
-                [ H.span [ class "pf-c-accordion__toggle-text" ] children
-                , H.span [ class "pf-c-accordion__toggle-icon" ] []
-                ]
-        in
-        component (attributes ++ classes :: attrs) updatedChildren
+        attrs =
+            toAttributes
+
+        updatedChildren =
+            [ H.span [ class "pf-c-accordion__toggle-text" ] opts.children
+            , H.span [ class "pf-c-accordion__toggle-icon" ] []
+            ]
+
+        wrapper =
+            case opts.listType of
+                DefinitionList ->
+                    H.dt []
+
+                Div ->
+                    H.h3 []
+    in
+    wrapper [ component (attributes ++ classes :: attrs) updatedChildren ]

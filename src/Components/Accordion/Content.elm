@@ -4,8 +4,9 @@ module Components.Accordion.Content exposing
     , withComponent
     , withCustomContent
     , withFixed
-    , withHidden,
-        toHtml
+    , withHidden
+    , toHtml
+    , setAttributes, setChildren, withAttribute, withChild
     )
 
 {-| The content of an accordion item.
@@ -40,12 +41,15 @@ module Components.Accordion.Content exposing
 
 @docs withHidden
 
+
 # To HTML
 
 @docs toHtml
+
 -}
 
-import Html exposing (Attribute, Html, div)
+import Components.Accordion.Types exposing (ListType(..))
+import Html as H exposing (Attribute, Html, div)
 import Html.Attributes exposing (attribute, class, classList, disabled, type_)
 
 
@@ -61,6 +65,9 @@ type alias Options msg =
     , isCustomContent : Bool
     , isFixed : Bool
     , isHidden : Bool
+    , listType : ListType
+    , children : List (Html msg)
+    , attributes : List (Attribute msg)
     }
 
 
@@ -71,6 +78,9 @@ defaultOptions =
     , isCustomContent = False
     , isFixed = False
     , isHidden = False
+    , listType = DefinitionList
+    , children = []
+    , attributes = []
     }
 
 
@@ -142,20 +152,57 @@ withHidden bool (Builder opts) =
 
 
 
+-- * Children
+
+
+withChild : Html msg -> Builder msg -> Builder msg
+withChild html (Builder opts) =
+    Builder { opts | children = html :: opts.children }
+
+
+setChildren : List (Html msg) -> Builder msg -> Builder msg
+setChildren htmls (Builder opts) =
+    Builder { opts | children = htmls }
+
+
+
+-- * Attributes
+
+
+withAttribute : Attribute msg -> Builder msg -> Builder msg
+withAttribute attr (Builder opts) =
+    Builder { opts | attributes = attr :: opts.attributes }
+
+
+setAttributes : List (Attribute msg) -> Builder msg -> Builder msg
+setAttributes attrs (Builder opts) =
+    Builder { opts | attributes = attrs }
+
+
+
 -- * To HTML
 
 
 toClasses : Builder msg -> List ( String, Bool )
 toClasses (Builder opts) =
     let
+        classes =
+            ( "pf-c-accordion__expanded-content-body", True )
+    in
+    [ classes ]
+
+
+toWrapperClasses : Builder msg -> List ( String, Bool )
+toWrapperClasses (Builder opts) =
+    let
         accordionContent =
             ( "pf-c-accordion__expanded-content", True )
 
-        expanded =
-            ( "pf-m-expanded", not opts.isHidden )
-
         fixed =
             ( "pf-m-fixed", opts.isFixed )
+
+        expanded =
+            ( "pf-m-expanded", not opts.isHidden )
     in
     [ accordionContent, expanded, fixed ]
 
@@ -176,19 +223,27 @@ toAttributes (Builder opts) =
 {-| This function turns a Builder into a HTML component. Put this at
 the end of your pipeline to get a useable accordion content.
 -}
-toHtml : Builder msg -> List (Attribute msg) -> List (Html msg) -> Html msg
+toHtml : Builder msg -> Html msg
 toHtml ((Builder opts) as builder) =
-    \attributes children ->
-        let
-            component =
-                opts.component
+    let
+        attributes =
+            opts.attributes
 
-            classes =
-                classList <| toClasses builder
+        component =
+            opts.component
 
-            attr =
-                toAttributes builder
+        classes =
+            classList <| toClasses builder
 
-            updatedChildren = div [class "pf-c-accordion__expanded-content-body"] children
-        in
-        component (attributes ++ classes :: attr) [updatedChildren]
+        attr =
+            toAttributes builder
+
+        wrapper =
+            case opts.listType of
+                DefinitionList ->
+                    H.dd [ classList <| toWrapperClasses builder ]
+
+                Div ->
+                    H.div [ classList <| toWrapperClasses builder ]
+    in
+    wrapper [ component (attributes ++ classes :: attr) opts.children ]

@@ -1,10 +1,11 @@
 module Components.Accordion exposing
     ( Builder, default
-    , ListType(..), withListType
+    , withListType
     , withClassName
     , DisplaySize(..), withDisplaySize
     , HeadingLevel(..), withHeadingLevel
     , withBorder
+    , withAccordionItem
     , toHtml
     )
 
@@ -57,6 +58,8 @@ see [here](https://www.patternfly.org/v4/components/accordion).
 
 -}
 
+import Components.Accordion.Item as AccordionItem
+import Components.Accordion.Types exposing (..)
 import Html as H exposing (Attribute, Html)
 import Html.Attributes exposing (attribute, class, classList, disabled, type_)
 
@@ -64,25 +67,27 @@ import Html.Attributes exposing (attribute, class, classList, disabled, type_)
 {-| Opaque builder type used to build a pipeline around.
 -}
 type Builder msg
-    = Builder Options
+    = Builder (Options msg)
 
 
-type alias Options =
+type alias Options msg =
     { className : Maybe String
     , listType : ListType
     , displaySize : DisplaySize
     , headingLevel : HeadingLevel
     , isBordered : Bool
+    , accordionItems : List (AccordionItem.Builder msg)
     }
 
 
-defaultOptions : Options
+defaultOptions : Options msg
 defaultOptions =
     { className = Nothing
-    , listType = Div
+    , listType = DefinitionList
     , displaySize = Default
     , headingLevel = H3
     , isBordered = False
+    , accordionItems = []
     }
 
 
@@ -98,12 +103,12 @@ default =
 -- * List Type
 
 
-{-| The list type - either a `DefinitionList` or a `Div`. Information
-about definition lists can be found [here](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dl).
--}
-type ListType
-    = DefinitionList
-    | Div
+-- {-| The list type - either a `DefinitionList` or a `Div`. Information
+-- about definition lists can be found [here](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dl).
+-- -}
+-- type ListType
+--     = DefinitionList
+--     | Div
 
 
 {-| An accordion can be based off either a Definition List, or a
@@ -200,6 +205,25 @@ withBorder bool (Builder opts) =
 
 
 
+-- * Items
+
+
+{-| Add an accordion item to the already existing accordion
+items.
+-}
+withAccordionItem : AccordionItem.Builder msg -> Builder msg -> Builder msg
+withAccordionItem item (Builder opts) =
+    Builder { opts | accordionItems = item :: opts.accordionItems }
+
+
+{-| Completely override and set the accordion items in the Builder.
+-}
+setAccordionItems : List (AccordionItem.Builder msg) -> Builder msg -> Builder msg
+setAccordionItems items (Builder opts) =
+    Builder { opts | accordionItems = items }
+
+
+
 -- * To HTML
 
 
@@ -232,9 +256,13 @@ toClasses (Builder opts) =
             else
                 ( "", False )
 
-        size = case opts.displaySize of
-                   Default -> ("", False)
-                   Large -> ("pf-m-display-lg", True)
+        size =
+            case opts.displaySize of
+                Default ->
+                    ( "", False )
+
+                Large ->
+                    ( "pf-m-display-lg", True )
 
         className =
             case opts.className of
@@ -244,16 +272,15 @@ toClasses (Builder opts) =
                 Nothing ->
                     ( "", False )
     in
-    [ accordion, isBordered, size, className]
-
+    [ accordion, isBordered, size, className ]
 
 
 {-| This function turns a Builder into a HTML component. Put this at
 the end of your pipeline to get a useable accordion.
 -}
-toHtml : Builder msg -> List (Attribute msg) -> List (Html msg) -> Html msg
+toHtml : Builder msg -> List (Attribute msg) -> Html msg
 toHtml ((Builder opts) as builder) =
-    \attributes children ->
+    \attributes ->
         let
             components =
                 toComponent builder
@@ -263,15 +290,7 @@ toHtml ((Builder opts) as builder) =
 
             childComponent =
                 components.childHtml
-
-            updatedChildren =
-                case opts.listType of
-                    Div ->
-                        List.map (\child -> headingLevelToComponent opts.headingLevel [ child ]) children
-
-                    DefinitionList ->
-                        List.map (\child -> childComponent [] [ child ]) children
         in
         mainComponent
             (attributes ++ [ classList <| toClasses builder ])
-            children
+            (List.concatMap AccordionItem.toHtml opts.accordionItems)
