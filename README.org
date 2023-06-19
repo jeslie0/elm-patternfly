@@ -2,7 +2,6 @@
 * [2/90] [2%] List of "components"
 ** TODO About modal
 ** DONE Accordion
-Need to update documentation.
 ** TODO Action list
 ** TODO Alert
 ** TODO Alert group

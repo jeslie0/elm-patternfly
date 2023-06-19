@@ -1,16 +1,51 @@
 module Components.Accordion.Toggle exposing
-    ( Builder
-    , default
-    , setAttributes
-    , setChildren
-    , toHtml
-    , withAttribute
-    , withChild
+    ( Builder, default
     , withClassName
     , withComponent
     , withExpanded
-    , withHeadingLevel
+    , withAttribute, setAttributes
+    , withChild, setChildren
+    , withHeadingLevel, toHtml
     )
+
+{-| The toggle of an Accordion Item.
+
+
+# Builder
+
+@docs Builder, default
+
+
+# Class name
+
+@docs withClassName
+
+
+# Component
+
+@docs withComponent
+
+
+# Expanded
+
+@docs withExpanded
+
+
+# Attributes
+
+@docs withAttribute, setAttributes
+
+
+# Children
+
+@docs withChild, setChildren
+
+
+# Internal
+
+@docs withHeadingLevel, toHtml
+
+-}
 
 import Components.Accordion.Types exposing (HeadingLevel(..))
 import Html as H exposing (Attribute, Html, button)
@@ -18,7 +53,7 @@ import Html.Attributes exposing (class, classList, type_)
 import Icons.AngleRight exposing (angleRight)
 
 
-{-| Opaque builder type used to build a pipeline around.
+{-| Opaque Builder type used to build a pipeline around.
 -}
 type Builder msg
     = Builder (Options msg)
@@ -65,9 +100,9 @@ default id =
 {-| The accordion content can be given a custom class name by passing in a className
 string.
 -}
-withClassName : Maybe String -> Builder msg -> Builder msg
-withClassName mString (Builder opts) =
-    Builder { opts | className = mString }
+withClassName : String -> Builder msg -> Builder msg
+withClassName string (Builder opts) =
+    Builder { opts | className = Just string }
 
 
 
@@ -85,6 +120,10 @@ withComponent comp (Builder opts) =
 -- * Is Expanded
 
 
+{-| Set whether or not the Accordion Toggle is expanded or not. This boolean
+should generally be the negation of the Accordion Content's
+`withHidden` boolean.
+-}
 withExpanded : Bool -> Builder msg -> Builder msg
 withExpanded bool (Builder opts) =
     Builder { opts | isExpanded = bool }
@@ -94,6 +133,11 @@ withExpanded bool (Builder opts) =
 -- * Heading Level
 
 
+{-| Change the heading level type of the given Builder. You shouldn't
+need to ever call this when making an Accordion - the Accordion's
+`toHtml` function will set the heading level of all of it's HTML
+elements appropriately.
+-}
 withHeadingLevel : HeadingLevel -> Builder msg -> Builder msg
 withHeadingLevel level (Builder opts) =
     Builder { opts | headingLevel = level }
@@ -103,11 +147,16 @@ withHeadingLevel level (Builder opts) =
 -- * Children
 
 
+{-| Add a single child HTML element to the Accordion Toggle's children.
+-}
 withChild : Html msg -> Builder msg -> Builder msg
 withChild html (Builder opts) =
     Builder { opts | children = html :: opts.children }
 
 
+{-| Give a list of HTML elements and set them as the children of this
+Accordion Toggle.
+-}
 setChildren : List (Html msg) -> Builder msg -> Builder msg
 setChildren htmls (Builder opts) =
     Builder { opts | children = htmls }
@@ -117,11 +166,16 @@ setChildren htmls (Builder opts) =
 -- * Attributes
 
 
+{-| Pass an attribute to the Accordion Content.
+-}
 withAttribute : Attribute msg -> Builder msg -> Builder msg
 withAttribute attr (Builder opts) =
     Builder { opts | attributes = attr :: opts.attributes }
 
 
+{-| Set the attributes of the Accordion Toggle to be the given list
+of attributes.
+-}
 setAttributes : List (Attribute msg) -> Builder msg -> Builder msg
 setAttributes attrs (Builder opts) =
     Builder { opts | attributes = attrs }
@@ -173,6 +227,9 @@ headingLevelToComponent level =
             H.dt []
 
 
+{-| This function turns a Builder into a HTML element. This shouldn't
+be used if you are constructing an Accordion Builder.
+-}
 toHtml : Builder msg -> Html msg
 toHtml ((Builder opts) as builder) =
     let

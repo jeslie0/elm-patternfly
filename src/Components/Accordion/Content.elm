@@ -5,11 +5,12 @@ module Components.Accordion.Content exposing
     , withCustomContent
     , withFixed
     , withHidden
-    , toHtml
-    , setAttributes, setChildren, withAttribute, withChild, withHeadingLevel
+    , withAttribute, setAttributes
+    , withChild, setChildren
+    , withHeadingLevel, toHtml
     )
 
-{-| The content of an accordion item.
+{-| The content of an Accordion Item.
 
 
 # Builder
@@ -42,9 +43,19 @@ module Components.Accordion.Content exposing
 @docs withHidden
 
 
-# To HTML
+# Attributes
 
-@docs toHtml
+@docs withAttribute, setAttributes
+
+
+# Children
+
+@docs withChild, setChildren
+
+
+# Internal
+
+@docs withHeadingLevel, toHtml
 
 -}
 
@@ -53,7 +64,7 @@ import Html as H exposing (Attribute, Html, div)
 import Html.Attributes exposing (attribute, classList)
 
 
-{-| Opaque builder type used to build a pipeline around.
+{-| Opaque Builder type used to build a pipeline around.
 -}
 type Builder msg
     = Builder (Options msg)
@@ -84,7 +95,7 @@ defaultOptions =
     }
 
 
-{-| The default accordion builder. This should be the start of a
+{-| The default Accordion Content Builder. This should be the start of a
 builder pipeline.
 -}
 default : Builder msg
@@ -96,19 +107,19 @@ default =
 -- * Classname
 
 
-{-| The accordion content can be given a custom class name by passing in a className
+{-| The Accordion Content can be given a custom class name by passing in a className
 string.
 -}
-withClassName : Maybe String -> Builder msg -> Builder msg
-withClassName mString (Builder opts) =
-    Builder { opts | className = mString }
+withClassName : String -> Builder msg -> Builder msg
+withClassName string (Builder opts) =
+    Builder { opts | className = Just string }
 
 
 
 -- * Custom component
 
 
-{-| Component to use as content container.
+{-| Component to use as Accordion Content's HTML element.
 -}
 withComponent : (List (Attribute msg) -> List (Html msg) -> Html msg) -> Builder msg -> Builder msg
 withComponent comp (Builder opts) =
@@ -120,7 +131,7 @@ withComponent comp (Builder opts) =
 
 
 {-| Flag to indicate the content is custom. Expanded content Body
-wrapper will be removed from children. This allows multiple bodioes to
+wrapper will be removed from children. This allows multiple bodies to
 be rendered as content
 -}
 withCustomContent : Bool -> Builder msg -> Builder msg
@@ -132,7 +143,7 @@ withCustomContent bool (Builder opts) =
 -- * Fixed
 
 
-{-| Flag to indicate Accordion content is fixed.
+{-| Flag to indicate Accordion Content is fixed.
 -}
 withFixed : Bool -> Builder msg -> Builder msg
 withFixed bool (Builder opts) =
@@ -143,18 +154,21 @@ withFixed bool (Builder opts) =
 -- * Hidden
 
 
-{-| Flag to show if the expanded content of the Accordion item is
-visible.
+{-| Flag to show if the expanded content of the Accordion Item is
+hidden or not. This boolean should generally be the negation of the
+Accordion Toggle's `withExpanded` boolean.
+
 -}
 withHidden : Bool -> Builder msg -> Builder msg
 withHidden bool (Builder opts) =
     Builder { opts | isHidden = bool }
 
 
-
--- * HeadingLevel
-
-
+{-| Change the heading level type of the given Builder. You shouldn't
+need to ever call this when making an Accordion - the Accordion's
+`toHtml` function will set the heading level of all of it's HTML
+elements appropriately.
+-}
 withHeadingLevel : HeadingLevel -> Builder msg -> Builder msg
 withHeadingLevel level (Builder opts) =
     Builder { opts | headingLevel = level }
@@ -164,11 +178,16 @@ withHeadingLevel level (Builder opts) =
 -- * Children
 
 
+{-| Add a single child HTML element to the Accordion Content's children.
+-}
 withChild : Html msg -> Builder msg -> Builder msg
 withChild html (Builder opts) =
     Builder { opts | children = html :: opts.children }
 
 
+{-| Give a list of HTML elements and set them as the children of this
+Accordion Content.
+-}
 setChildren : List (Html msg) -> Builder msg -> Builder msg
 setChildren htmls (Builder opts) =
     Builder { opts | children = htmls }
@@ -178,11 +197,16 @@ setChildren htmls (Builder opts) =
 -- * Attributes
 
 
+{-| Pass an attribute to the Accordion Content.
+-}
 withAttribute : Attribute msg -> Builder msg -> Builder msg
 withAttribute attr (Builder opts) =
     Builder { opts | attributes = attr :: opts.attributes }
 
 
+{-| Set the attributes of the Accordion Content to be the given list
+of attributes.
+-}
 setAttributes : List (Attribute msg) -> Builder msg -> Builder msg
 setAttributes attrs (Builder opts) =
     Builder { opts | attributes = attrs }
@@ -193,7 +217,7 @@ setAttributes attrs (Builder opts) =
 
 
 toClasses : Builder msg -> List ( String, Bool )
-toClasses (Builder opts) =
+toClasses (Builder _) =
     let
         classes =
             ( "pf-c-accordion__expanded-content-body", True )
@@ -229,8 +253,8 @@ toWrapperAttributes (Builder opts) =
     hidden
 
 
-{-| This function turns a Builder into a HTML component. Put this at
-the end of your pipeline to get a useable accordion content.
+{-| This function turns a Builder into a HTML element. This shouldn't
+be used if you are constructing an Accordion Builder.
 -}
 toHtml : Builder msg -> Html msg
 toHtml ((Builder opts) as builder) =

@@ -4,8 +4,9 @@ module Components.Accordion exposing
     , DisplaySize(..), withDisplaySize
     , withHeadingLevel
     , withBorder
+    , withAttribute, setAttributes
+    , withAccordionItem, setAccordionItems
     , toHtml
-    , setAccordionItems, setAttributes, withAccordionItem, withAttribute
     )
 
 {-| An **accordion** is an interactive container that expands and
@@ -21,34 +22,45 @@ see [here](https://www.patternfly.org/v4/components/accordion).
 # Accordions
 
 
-## Builder
+# Builder
 
 @docs Builder, default
 
 
-## List type
-
-@docs ListType, withListType
-
-
-## Class name
+# Class name
 
 @docs withClassName
 
 
-## Display size
+# Display size
 
 @docs DisplaySize, withDisplaySize
 
 
-## Heading level
+# Heading level
 
-@docs HeadingLevel, withHeadingLevel
+The "HeadingLevel" type can be found in Components.Accordion.Types.
+
+@docs withHeadingLevel
 
 
-## Borders
+# Borders
 
 @docs withBorder
+
+
+# Attributes
+
+@docs withAttribute, setAttributes
+
+
+# Accordion Items
+
+Accordion items are containers for the contents of an accordion. The
+Accordion Builder's Items are **not** HTML elements, but Accordion
+Item Builders.
+
+@docs withAccordionItem, setAccordionItems
 
 
 # To HTML
@@ -63,7 +75,7 @@ import Html as H exposing (Attribute, Html)
 import Html.Attributes exposing (classList)
 
 
-{-| Opaque builder type used to build a pipeline around.
+{-| Opaque Builder type used to build a pipeline around.
 -}
 type Builder msg
     = Builder (Options msg)
@@ -90,7 +102,7 @@ defaultOptions =
     }
 
 
-{-| The default accordion builder. This should be the start of a
+{-| The default Accordion Builder. This should be the start of a
 builder pipeline.
 -}
 default : Builder msg
@@ -102,12 +114,12 @@ default =
 -- * Classname
 
 
-{-| The accordion can be given a custom class name by passing in a className
+{-| The Accordion can be given a custom class name by passing in a className
 string.
 -}
-withClassName : Maybe String -> Builder msg -> Builder msg
-withClassName mString (Builder opts) =
-    Builder { opts | className = mString }
+withClassName : String -> Builder msg -> Builder msg
+withClassName string (Builder opts) =
+    Builder { opts | className = Just string }
 
 
 
@@ -139,7 +151,7 @@ withHeadingLevel level (Builder opts) =
 -- * Borders
 
 
-{-| Pipeline builder to indicate if the accordion has a border.
+{-| Pipeline builder to indicate if the Accordion has a border.
 -}
 withBorder : Bool -> Builder msg -> Builder msg
 withBorder bool (Builder opts) =
@@ -150,15 +162,21 @@ withBorder bool (Builder opts) =
 -- * Items
 
 
-{-| Add an accordion item to the already existing accordion
-items.
+{-| Add an Accordion Item to the already existing accordion
+items. The first Builder is an Accordion Item Builder, while the
+second is an Accordion Builder. The output is an Accordion Builder.
 -}
-withAccordionItem : AccordionItem.Builder msg -> Builder msg -> Builder msg
+withAccordionItem :
+    AccordionItem.Builder msg
+    -> Builder msg
+    -> Builder msg
 withAccordionItem options (Builder opts) =
     Builder { opts | accordionItems = options :: opts.accordionItems }
 
 
-{-| Completely override and set the accordion items in the Builder.
+{-| Completely override and set the Accordion Items in the
+Builder. The first argument is a list of Accordion Item Builders,
+while the second is an Accordion Builder. The output is an Accordion Builder.
 -}
 setAccordionItems : List (AccordionItem.Builder msg) -> Builder msg -> Builder msg
 setAccordionItems items (Builder opts) =
@@ -169,11 +187,16 @@ setAccordionItems items (Builder opts) =
 -- * Attributes
 
 
+{-| Add an attribute to the Accordion HTML element.
+-}
 withAttribute : Attribute msg -> Builder msg -> Builder msg
 withAttribute attr (Builder opts) =
     Builder { opts | attributes = attr :: opts.attributes }
 
 
+{-| Set the attributes of the Accordion HTML element to be the given
+list of attributes.
+-}
 setAttributes : List (Attribute msg) -> Builder msg -> Builder msg
 setAttributes attrs (Builder opts) =
     Builder { opts | attributes = attrs }
@@ -227,6 +250,9 @@ toClasses (Builder opts) =
 
 {-| This function turns a Builder into a HTML component. Put this at
 the end of your pipeline to get a useable accordion.
+
+Note - this should be the only Accordion related `toHtml` function you
+need to use.
 -}
 toHtml : Builder msg -> Html msg
 toHtml ((Builder opts) as builder) =
