@@ -30,9 +30,11 @@
           let js = pkgs.mkElmDerivation {
                 name = "${dirname}JS";
                 src = ./.;
-                targets = [ "examples/src/${dirname}/Main.elm"];
+                elmJson = ./examples/elm.json;
+                targets = [ "src/${dirname}/Main.elm"];
                 outputJavaScript = true;
                 optimizationLevel = 2;
+                preInstall = "cd examples";
                 postInstall = "mv $out/Main.min.js $out/main.min.js";
               };
 
