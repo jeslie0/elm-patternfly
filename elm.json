@@ -5,11 +5,13 @@
     "version": "0.0.0",
     "license": "MIT",
     "exposed-modules":
-    [ "Components.Button"
-        , "Components.Accordion"
+    [   "Components.Accordion"
         , "Components.Accordion.Item"
         , "Components.Accordion.Content"
         , "Components.Accordion.Toggle"
+        , "Components.Button"
+        , "Components.Button.BadgeCount"
+        , "Components.Button.Variant"
     ],
     "elm-version": "0.19.1 <= v < 0.20.0",
     "dependencies": {

@@ -1,16 +1,20 @@
 module Components.Button exposing
     ( Builder, default
-    , Variant(..), withVariant
+    , primary, secondary, tertiary, warning, danger, plain, control, link
+    , withVariant, withInline, withDanger
     , withClassName
     , withIsDisabled
     , ButtonSize(..), withButtonSize
     , withIsBlock
     , withIsLoading
     , withComponent
-    , BadgeCountObject, withBadgeCount
+    , withBadgeCount
     , ButtonType(..), withButtonType
     , withIsActive
+    , withAttribute, setAttributes
+    , withChild, setChildren
     , toHtml
+    , variantToBuilder
     )
 
 {-| A **button** is a box area or text that communicates and triggers user
@@ -22,7 +26,7 @@ like another page inside of a web application, or an external site
 such as help or documentation.
 
 This component corresponds to Patternfly's Button component, whose
-details can be found (here)[<https://www.patternfly.org/v4/components/button/>][https://www.patternfly.org/v4/components/button/].
+details can be found [here](https://www.patternfly.org/v4/components/button/).
 
 
 # Builder and options
@@ -32,10 +36,17 @@ style of customising the Patternfly HTML elements.
 
 @docs Builder, default
 
+We expose some default buttons styled with their variants. For more on
+variants, see the Components.Button.Variant module.
+
+@docs primary, secondary, tertiary, warning, danger, plain, control, link
+
 
 # Variants
 
-@docs Variant, withVariant
+For more on variants, see the Components.Button.Variant module
+
+@docs withVariant, withInline, withDanger, variantToBuilder
 
 
 # Class name
@@ -70,7 +81,7 @@ style of customising the Patternfly HTML elements.
 
 # Button with count
 
-@docs BadgeCountObject, withBadgeCount
+@docs withBadgeCount
 
 
 # Button Type
@@ -83,39 +94,51 @@ style of customising the Patternfly HTML elements.
 @docs withIsActive
 
 
+# Attributes
+
+@docs withAttribute, setAttributes
+
+
+# Children
+
+@docs withChild, setChildren
+
+
 # To HTML
 
 @docs toHtml
 
 -}
 
+import Components.Button.BadgeCount as BadgeCount
+import Components.Button.Variant as Variant
 import Html as H exposing (Attribute, Html)
 import Html.Attributes exposing (attribute, class, classList, disabled, type_)
 
 
-{-| Opaque builder type used to build a pipeline around.
+{-| Opaque Builder type used to build a pipeline around.
 -}
 type Builder msg
     = Builder (Options msg)
 
 
-{-| Configurable properties for building a Patternfly button.
--}
 type alias Options msg =
-    { className : Maybe String -- DONE
+    { className : Maybe String
     , component :
         List (Attribute msg)
         -> List (Html msg)
-        -> Html msg -- DONE
-    , buttonType : ButtonType -- DONE
-    , countOptions : Maybe BadgeCountObject -- DONE
+        -> Html msg
+    , buttonType : ButtonType
+    , countOptions : Maybe (BadgeCount.Builder msg)
     , icon : Maybe (Icon msg) -- TODO
-    , isActive : Bool -- DONE
-    , isBlock : Bool -- DONE
-    , isDisabled : Bool -- DONE
-    , isLoading : Maybe Bool -- DONE
-    , size : Maybe ButtonSize -- DONE
-    , variant : Maybe Variant -- DONE
+    , isActive : Bool
+    , isBlock : Bool
+    , isDisabled : Bool
+    , isLoading : Maybe Bool
+    , size : Maybe ButtonSize
+    , variant : Variant.Builder msg
+    , attributes : List (Attribute msg)
+    , children : List (Html msg)
     }
 
 
@@ -133,7 +156,9 @@ defaultOptions =
     , isDisabled = False
     , isLoading = Nothing
     , size = Nothing
-    , variant = Just Primary
+    , variant = Variant.primary
+    , attributes = []
+    , children = []
     }
 
 
@@ -143,6 +168,111 @@ pipeline.
 default : Builder msg
 default =
     Builder defaultOptions
+
+
+{-| A Button Builder with `primary` styling.
+-}
+primary : Builder msg
+primary =
+    Builder { defaultOptions | variant = Variant.primary }
+
+
+{-| A Button Builder with `secondary` styling.
+-}
+secondary : Builder msg
+secondary =
+    Builder { defaultOptions | variant = Variant.secondary }
+
+
+{-| A Button Builder with `tertiary` styling.
+-}
+tertiary : Builder msg
+tertiary =
+    Builder { defaultOptions | variant = Variant.tertiary }
+
+
+{-| A Button Builder with `warning` styling.
+-}
+warning : Builder msg
+warning =
+    Builder { defaultOptions | variant = Variant.warning }
+
+
+{-| A Button Builder with `danger` styling.
+-}
+danger : Builder msg
+danger =
+    Builder { defaultOptions | variant = Variant.danger }
+
+
+{-| A Button Builder with `plain` styling.
+-}
+plain : Builder msg
+plain =
+    Builder { defaultOptions | variant = Variant.plain }
+
+
+{-| A Button Builder with `control` styling.
+-}
+control : Builder msg
+control =
+    Builder { defaultOptions | variant = Variant.control }
+
+
+{-| A Button Builder with `link` styling.
+-}
+link : Builder msg
+link =
+    Builder { defaultOptions | variant = Variant.link }
+
+
+{-| Choose whether or to use a "danger" styling. This is different to
+the `danger` variant - the default danger styling only affects the
+`secondary` and `inline` variants, by changing the outline (of
+`secondary`) and the text colour to red.
+-}
+withDanger : Bool -> Builder msg -> Builder msg
+withDanger bool (Builder opts) =
+    Builder { opts | variant = Variant.withDanger bool opts.variant }
+
+
+{-| Choose whether to use the "inline" styling. This only applies to
+`link` variants, and changes the component to `span`.
+-}
+withInline : Bool -> Builder msg -> Builder msg
+withInline bool ((Builder opts) as builder) =
+    Builder { opts | variant = Variant.withInline bool opts.variant, component = H.span }
+
+
+{-| Convert a Button Variant into a Button Builder of the
+corresponding style.
+-}
+variantToBuilder : Variant.Variant -> Builder msg
+variantToBuilder var =
+    case var of
+        Variant.Primary ->
+            primary
+
+        Variant.Secondary ->
+            secondary
+
+        Variant.Tertiary ->
+            tertiary
+
+        Variant.Warning ->
+            warning
+
+        Variant.Danger ->
+            danger
+
+        Variant.Plain ->
+            plain
+
+        Variant.Control ->
+            control
+
+        Variant.Link ->
+            link
 
 
 
@@ -160,9 +290,9 @@ default =
 {-| The button can be given a custom class name by passing in a className
 string.
 -}
-withClassName : Maybe String -> Builder msg -> Builder msg
-withClassName mString (Builder opts) =
-    Builder { opts | className = mString }
+withClassName : String -> Builder msg -> Builder msg
+withClassName string (Builder opts) =
+    Builder { opts | className = Just string }
 
 
 
@@ -295,12 +425,12 @@ isLoadingToTuple mBool =
             ( "", False )
 
 
-isLoadingChildren : Maybe Bool -> List (Html msg) -> List (Html msg)
-isLoadingChildren mBool htmls =
+isLoadingChildren : Maybe Bool -> List (Html msg)
+isLoadingChildren mBool =
     case mBool of
         Just bool ->
             if bool then
-                H.span
+                [ H.span
                     [ class "pf-c-button__progress" ]
                     [ H.span
                         [ class "pf-c-spinner pf-m-md"
@@ -311,24 +441,24 @@ isLoadingChildren mBool htmls =
                         , H.span [ class "pf-c-spinner__tail-ball" ] []
                         ]
                     ]
-                    :: htmls
+                ]
 
             else
-                htmls
+                []
 
         Nothing ->
-            htmls
+            []
 
 
 {-| Progress indicators can be added to buttons to identify that an
 action is in progress after a click. If a button is never going to
-display a loading wheel, pass `Nothing` to the `Maybe Bool`
-argument. If the button will change between displaying a loading
-wheel, or not, pass `Just bool` instead.
+display a loading wheel don't pass apply this pipeline function to
+it. If the button will change between displaying a loading
+wheel, or not, pass `bool` instead.
 -}
-withIsLoading : Maybe Bool -> Builder msg -> Builder msg
-withIsLoading mBool (Builder opt) =
-    Builder { opt | isLoading = mBool }
+withIsLoading : Bool -> Builder msg -> Builder msg
+withIsLoading bool (Builder opt) =
+    Builder { opt | isLoading = Just bool }
 
 
 
@@ -350,54 +480,13 @@ withComponent comp (Builder opts) =
     Builder { opts | component = comp }
 
 
-
--- * Badge count
-
-
-{-| Buttons can display a `count` in the form of a badge to indicate
-some value or number. We use the `withBadgeCount` pipeline builder and
-pass it a BadgeCountObject, which contains a `className`, a `count`
-corresponding to the number to display and an `isRead` boolean which
-styles the count as either the "read" style (True) or the unread style (False).
+{-| The pipeline builder for the Badge count. Don't use this pipeline
+function if you don't ever want a badge count on this Button,
+otherwise, pass in the appropriate BadgeCountObject.
 -}
-type alias BadgeCountObject =
-    { className : String
-    , count : Int
-    , isRead : Bool
-    }
-
-
-{-| The pipeline builder for the Badge count. Pass Nothing for the
-`Maybe BadgeCountObject` argument if you don't ever want a badge
-count, otherwise, wrap your BadgeCountObject in `Just`.
--}
-withBadgeCount : Maybe BadgeCountObject -> Builder msg -> Builder msg
-withBadgeCount mBadgeCountObject (Builder opts) =
-    Builder { opts | countOptions = mBadgeCountObject }
-
-
-badgeCountChildren : Maybe BadgeCountObject -> List (Html msg) -> List (Html msg)
-badgeCountChildren mBadgeCountObject htmls =
-    case mBadgeCountObject of
-        Nothing ->
-            htmls
-
-        Just { className, count, isRead } ->
-            htmls
-                ++ [ H.span
-                        [ class "pf-c-button__count", class className ]
-                        [ H.span
-                            [ class "pf-c-badge"
-                            , class <|
-                                if isRead then
-                                    "pf-m-read"
-
-                                else
-                                    "pf-m-unread"
-                            ]
-                            [ H.text (String.fromInt count) ]
-                        ]
-                   ]
+withBadgeCount : BadgeCount.Builder msg -> Builder msg -> Builder msg
+withBadgeCount badgeCountBuilder (Builder opts) =
+    Builder { opts | countOptions = Just badgeCountBuilder }
 
 
 
@@ -433,92 +522,49 @@ withButtonSize size (Builder opt) =
     Builder { opt | size = Just size }
 
 
-
--- * Variants
-
-
-isDangerToTuple : Bool -> ( String, Bool )
-isDangerToTuple isDanger =
-    if isDanger then
-        ( " pf-m-danger", isDanger )
-
-    else
-        ( "", isDanger )
-
-
-isInlineToTuple : Bool -> ( String, Bool )
-isInlineToTuple isInline =
-    if isInline then
-        ( "pf-m-inline", isInline )
-
-    else
-        ( "", isInline )
-
-
-{-| PatternFly supports several button styling variants to be used in
-different scenarios as needed. The button variants can be
-assigned using the `withVariant` function.
-
-The variants allow styleing where appropriate. For instance, only the
-`Secondary` and `Link` styles admit a "danger" style, hence they are
-the only ones that admit that option.
-
+{-| Apply the given variant to the Button Builder.
 -}
-type Variant
-    = Primary
-    | Secondary { isDanger : Bool }
-    | Tertiary
-    | Warning
-    | Danger
-    | Plain
-    | Control
-    | Link { isDanger : Bool, isInline : Bool }
+withVariant : Variant.Builder msg -> Builder msg -> Builder msg
+withVariant varopts (Builder opts) =
+    Builder { opts | variant = varopts }
 
 
-variantToTuple : Variant -> ( String, Bool )
-variantToTuple variant =
-    case variant of
-        Primary ->
-            ( "pf-m-primary", True )
 
-        Secondary { isDanger } ->
-            let
-                ( dangerString, _ ) =
-                    isDangerToTuple isDanger
-            in
-            ( "pf-m-secondary" ++ dangerString, True )
-
-        Tertiary ->
-            ( "pf-m-tertiary", True )
-
-        Warning ->
-            ( "pf-m-warning", True )
-
-        Danger ->
-            ( "pf-m-danger", True )
-
-        Plain ->
-            ( "pf-m-plain", True )
-
-        Control ->
-            ( "pf-m-control", True )
-
-        Link { isDanger, isInline } ->
-            let
-                ( dangerString, _ ) =
-                    isDangerToTuple isDanger
-
-                ( inlineString, _ ) =
-                    isInlineToTuple isInline
-            in
-            ( "pf-m-link" ++ dangerString ++ inlineString, True )
+-- * Attributes
 
 
-{-| Style a button with the given variant.
+{-| Add an attribute to the Accordion HTML element.
 -}
-withVariant : Variant -> Builder msg -> Builder msg
-withVariant variant (Builder opt) =
-    Builder { opt | variant = Just variant }
+withAttribute : Attribute msg -> Builder msg -> Builder msg
+withAttribute attr (Builder opts) =
+    Builder { opts | attributes = attr :: opts.attributes }
+
+
+{-| Set the attributes of the Accordion HTML element to be the given
+list of attributes.
+-}
+setAttributes : List (Attribute msg) -> Builder msg -> Builder msg
+setAttributes attrs (Builder opts) =
+    Builder { opts | attributes = attrs }
+
+
+
+-- * Children
+
+
+{-| Add a single child HTML element to the Accordion Toggle's children.
+-}
+withChild : Html msg -> Builder msg -> Builder msg
+withChild html (Builder opts) =
+    Builder { opts | children = html :: opts.children }
+
+
+{-| Give a list of HTML elements and set them as the children of this
+Accordion Toggle.
+-}
+setChildren : List (Html msg) -> Builder msg -> Builder msg
+setChildren htmls (Builder opts) =
+    Builder { opts | children = htmls }
 
 
 
@@ -557,14 +603,9 @@ toClass (Builder opts) =
                     buttonSizeToTuple btnSize
 
         variant =
-            case opts.variant of
-                Nothing ->
-                    ( "", False )
-
-                Just var ->
-                    variantToTuple var
+            Variant.variantToTuple opts.variant
     in
-    [ pfButton, isActive, isBlock, isLoading, size, variant, className  ]
+    [ pfButton, isActive, isBlock, isLoading, size, className ] ++ variant
 
 
 toAttributes : Builder msg -> List (Attribute msg)
@@ -576,14 +617,19 @@ toAttributes (Builder opts) =
         btnType =
             type_ <| buttonTypeToString opts.buttonType
     in
-    [ btnType, isDisabledAttr ]
+    [ btnType, isDisabledAttr ] ++ opts.attributes
 
 
-makeChildren : Builder msg -> List (Html msg) -> List (Html msg)
-makeChildren (Builder opts) htmls =
-    isLoadingChildren opts.isLoading <|
-        badgeCountChildren opts.countOptions <|
-            htmls
+makeChildren : Builder msg -> List (Html msg)
+makeChildren (Builder opts) =
+    isLoadingChildren opts.isLoading
+        ++ (case opts.countOptions of
+                Just countOpts ->
+                    opts.children ++ BadgeCount.toHtml countOpts
+
+                Nothing ->
+                    opts.children
+           )
 
 
 
@@ -593,9 +639,8 @@ makeChildren (Builder opts) htmls =
 {-| This function turns a Builder into a HTML component. Put this at
 the end of your pipeline to get a useable button.
 -}
-toHtml : Builder msg -> List (Attribute msg) -> List (Html msg) -> Html msg
-toHtml (Builder opts as builder) =
-    \attributes children ->
-        opts.component
-            (attributes ++ ((classList <| toClass builder) :: toAttributes builder))
-            (makeChildren builder children)
+toHtml : Builder msg -> Html msg
+toHtml ((Builder opts) as builder) =
+    opts.component
+        ((classList <| toClass builder) :: toAttributes builder)
+        (makeChildren builder)
