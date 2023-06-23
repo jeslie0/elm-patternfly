@@ -122,6 +122,39 @@ import Html as H exposing (Attribute, Html)
 import Html.Attributes exposing (attribute, class, classList, disabled, type_)
 
 
+classes =
+    { button = "pf-c-button"
+    , icon = "pf-c-button__icon"
+    , start = "pf-m-start"
+    , end = "pf-m-end"
+    , small = "pf-m-small"
+    , large = "pf-m-display-lg"
+    , progress = "pf-c-button__progress"
+    , medium = "pf-m-md"
+    , spinner =
+        { spinner = "pf-c-spinner"
+        , clipper = "pf-c-spinner__clipper"
+        , leadBall = "pf-c-spinner__lead-ball"
+        , tailBall = "pf-c-spinner__tail-ball"
+        }
+    , loading =
+        { progress = "pf-m-progress"
+        , inProgress = "pf-m-in-progress"
+        }
+    , block = "pf-m-block"
+    , active = "pf-m-active"
+    , inline = "pf-m-inline"
+    , danger = "pf-m-danger"
+    , link = "pf-m-link"
+    , control = "pf-m-control"
+    , plain = "pf-m-plain"
+    , warning = "pf-m-warning"
+    , tertiary = "pf-m-tertiary"
+    , secondary = "pf-m-secondary"
+    , primary = "pf-m-primary"
+    }
+
+
 {-| Opaque Builder type used to build a pipeline around.
 -}
 type Builder msg
@@ -290,34 +323,34 @@ variantToTuple : VariantBuilder msg -> List ( String, Bool )
 variantToTuple (VariantBuilder varopts) =
     case varopts of
         Pri ->
-            [ ( "pf-m-primary", True ) ]
+            [ ( classes.primary, True ) ]
 
         Sec { isDanger } ->
-            [ ( "pf-m-secondary", True ), isDangerToTuple isDanger ]
+            [ ( classes.secondary, True ), isDangerToTuple isDanger ]
 
         Ter ->
-            [ ( "pf-m-tertiary", True ) ]
+            [ ( classes.tertiary, True ) ]
 
         Warn ->
-            [ ( "pf-m-warning", True ) ]
+            [ ( classes.warning, True ) ]
 
         Dngr ->
-            [ ( "pf-m-danger", True ) ]
+            [ ( classes.danger, True ) ]
 
         Pln ->
-            [ ( "pf-m-plain", True ) ]
+            [ ( classes.plain, True ) ]
 
         Ctrl ->
-            [ ( "pf-m-control", True ) ]
+            [ ( classes.control, True ) ]
 
         Lnk { isDanger, isInline } ->
-            [ ( "pf-m-link", True ), isDangerToTuple isDanger, isInlineToTuple isInline ]
+            [ ( classes.link, True ), isDangerToTuple isDanger, isInlineToTuple isInline ]
 
 
 isDangerToTuple : Bool -> ( String, Bool )
 isDangerToTuple isDanger =
     if isDanger then
-        ( " pf-m-danger", isDanger )
+        ( classes.danger, isDanger )
 
     else
         ( "", isDanger )
@@ -326,7 +359,7 @@ isDangerToTuple isDanger =
 isInlineToTuple : Bool -> ( String, Bool )
 isInlineToTuple isInline =
     if isInline then
-        ( "pf-m-inline", isInline )
+        ( classes.inline, isInline )
 
     else
         ( "", isInline )
@@ -554,7 +587,7 @@ withIconPosition pos (Builder opts) =
 isActiveToTuple : Bool -> ( String, Bool )
 isActiveToTuple isActive =
     if isActive then
-        ( "pf-m-active", isActive )
+        ( classes.active, isActive )
 
     else
         ( "", isActive )
@@ -598,7 +631,7 @@ withIsDisabled bool (Builder opts) =
 isBlockToTuple : Bool -> ( String, Bool )
 isBlockToTuple isBlock =
     if isBlock then
-        ( "pf-m-block", isBlock )
+        ( classes.block, isBlock )
 
     else
         ( "", isBlock )
@@ -617,18 +650,14 @@ withIsBlock bool (Builder opt) =
 -- * Is Loading
 
 
-isLoadingToTuple : Maybe Bool -> ( String, Bool )
+isLoadingToTuple : Maybe Bool -> List ( String, Bool )
 isLoadingToTuple mBool =
     case mBool of
         Just bool ->
-            if bool then
-                ( "pf-m-progress pf-m-in-progress", True )
-
-            else
-                ( "pf-m-progress", True )
+            [ ( classes.loading.progress, True ), ( classes.loading.inProgress, bool ) ]
 
         Nothing ->
-            ( "", False )
+            [ ( "", False ) ]
 
 
 isLoadingChildren : Maybe Bool -> List (Html msg)
@@ -637,14 +666,15 @@ isLoadingChildren mBool =
         Just bool ->
             if bool then
                 [ H.span
-                    [ class "pf-c-button__progress" ]
+                    [ class classes.progress ]
                     [ H.span
-                        [ class "pf-c-spinner pf-m-md"
+                        [ class classes.spinner.spinner
+                        , class classes.medium
                         , attribute "role" "progressbar"
                         ]
-                        [ H.span [ class "pf-c-spinner__clipper" ] []
-                        , H.span [ class "pf-c-spinner__lead-ball" ] []
-                        , H.span [ class "pf-c-spinner__tail-ball" ] []
+                        [ H.span [ class classes.spinner.clipper ] []
+                        , H.span [ class classes.spinner.leadBall ] []
+                        , H.span [ class classes.spinner.tailBall ] []
                         ]
                     ]
                 ]
@@ -714,10 +744,10 @@ buttonSizeToTuple : ButtonSize -> ( String, Bool )
 buttonSizeToTuple size =
     case size of
         IsSmall ->
-            ( "pf-m-small", True )
+            ( classes.small, True )
 
         IsLarge ->
-            ( "pf-m-display-lg", True )
+            ( classes.large, True )
 
 
 {-| Use `withButtonSize` to set the size of the size of the button,
@@ -792,12 +822,12 @@ makeChildren (Builder opts) =
                 Just { icon, position } ->
                     case position of
                         Left ->
-                            ( [ H.span [ class "pf-c-button__icon", class "pf-m-start" ] [ icon ] ]
+                            ( [ H.span [ class classes.icon, class classes.start ] [ icon ] ]
                             , []
                             )
 
                         Right ->
-                            ( [], [ H.span [ class "pf-c-button__icon", class "pf-m-end" ] [ icon ] ] )
+                            ( [], [ H.span [ class classes.icon, class classes.end ] [ icon ] ] )
 
                 Nothing ->
                     ( [], [] )
@@ -809,7 +839,7 @@ toClasses : Builder msg -> List ( String, Bool )
 toClasses (Builder opts) =
     let
         pfButton =
-            ( "pf-c-button", True )
+            ( classes.button, True )
 
         className =
             case opts.className of
@@ -839,7 +869,7 @@ toClasses (Builder opts) =
         variant =
             variantToTuple opts.variant
     in
-    [ pfButton, isActive, isBlock, isLoading, size, className ] ++ variant
+    [ pfButton, isActive, isBlock ] ++ isLoading ++ [ size, className ] ++ variant
 
 
 toAttributes : Builder msg -> List (Attribute msg)
