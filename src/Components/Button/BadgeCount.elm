@@ -1,9 +1,9 @@
 module Components.Button.BadgeCount exposing
-    ( default
+    ( Builder, default
     , withClassName
     , withCount
     , withRead
-    , Builder, toHtml
+    , toHtml
     )
 
 {-| Buttons can display a `count` in the form of a badge to indicate
@@ -33,7 +33,9 @@ style (`False`).
 
 @docs withRead
 
+
 # Internal
+
 @docs toHtml
 
 -}
@@ -106,6 +108,7 @@ classes (Builder opts) =
                     ( "", False )
     in
     [ buttonCount, className ]
+
 
 {-| Render the Badge Count Builder. Note, this should not be called if
 you are using a Button Builder. The Button's `toHtml` will call this,

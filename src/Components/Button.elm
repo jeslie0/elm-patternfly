@@ -1,7 +1,7 @@
 module Components.Button exposing
     ( Builder, default
     , primary, secondary, tertiary, warning, danger, plain, control, link
-    , withVariant, withInline, withDanger
+    , Variant(..), withInline, withDanger, variantToBuilder
     , withClassName
     , withIsDisabled
     , ButtonSize(..), withButtonSize
@@ -11,10 +11,10 @@ module Components.Button exposing
     , withBadgeCount
     , ButtonType(..), withButtonType
     , withIsActive
+    , withIcon, IconPosition(..), withIconPosition
     , withAttribute, setAttributes
     , withChild, setChildren
     , toHtml
-    , variantToBuilder
     )
 
 {-| A **button** is a box area or text that communicates and triggers user
@@ -36,17 +36,14 @@ style of customising the Patternfly HTML elements.
 
 @docs Builder, default
 
-We expose some default buttons styled with their variants. For more on
-variants, see the Components.Button.Variant module.
+We expose some default buttons styled with their variants.
 
 @docs primary, secondary, tertiary, warning, danger, plain, control, link
 
 
 # Variants
 
-For more on variants, see the Components.Button.Variant module
-
-@docs withVariant, withInline, withDanger, variantToBuilder
+@docs Variant, withInline, withDanger, variantToBuilder
 
 
 # Class name
@@ -94,6 +91,16 @@ For more on variants, see the Components.Button.Variant module
 @docs withIsActive
 
 
+# Icon
+
+Buttons have a spot for an icon, either on the left or the right of
+its main children spot. All variants support icons, except for the
+plain variant. An icon doesn't have to be an honest Icon, it can be
+any HTML element, however, it's a good idea to just use icons here.
+
+@docs withIcon, IconPosition, withIconPosition
+
+
 # Attributes
 
 @docs withAttribute, setAttributes
@@ -111,7 +118,6 @@ For more on variants, see the Components.Button.Variant module
 -}
 
 import Components.Button.BadgeCount as BadgeCount
-import Components.Button.Variant as Variant
 import Html as H exposing (Attribute, Html)
 import Html.Attributes exposing (attribute, class, classList, disabled, type_)
 
@@ -130,13 +136,13 @@ type alias Options msg =
         -> Html msg
     , buttonType : ButtonType
     , countOptions : Maybe (BadgeCount.Builder msg)
-    , icon : Maybe (Icon msg) -- TODO
+    , icon : Maybe (IconOptions msg)
     , isActive : Bool
     , isBlock : Bool
     , isDisabled : Bool
     , isLoading : Maybe Bool
     , size : Maybe ButtonSize
-    , variant : Variant.Builder msg
+    , variant : VariantBuilder msg
     , attributes : List (Attribute msg)
     , children : List (Html msg)
     }
@@ -156,7 +162,7 @@ defaultOptions =
     , isDisabled = False
     , isLoading = Nothing
     , size = Nothing
-    , variant = Variant.primary
+    , variant = primaryVar
     , attributes = []
     , children = []
     }
@@ -170,60 +176,234 @@ default =
     Builder defaultOptions
 
 
+{-| Opaque Button Variant VariantBuilder type used to build a pipeline around.
+-}
+type VariantBuilder msg
+    = VariantBuilder VariantOptions
+
+
+type VariantOptions
+    = Pri
+    | Sec { isDanger : Bool }
+    | Ter
+    | Warn
+    | Dngr
+    | Pln
+    | Ctrl
+    | Lnk { isDanger : Bool, isInline : Bool }
+
+
+{-| The "primary" button variant.
+-}
+primaryVar : VariantBuilder msg
+primaryVar =
+    VariantBuilder Pri
+
+
+{-| The "secondary" button variant.
+-}
+secondaryVar : VariantBuilder msg
+secondaryVar =
+    VariantBuilder (Sec { isDanger = False })
+
+
+{-| The "tertiary" button variant.
+-}
+tertiaryVar : VariantBuilder msg
+tertiaryVar =
+    VariantBuilder Ter
+
+
+{-| The "warning" button variant.
+-}
+warningVar : VariantBuilder msg
+warningVar =
+    VariantBuilder Warn
+
+
+{-| The "danger" button variant.
+-}
+dangerVar : VariantBuilder msg
+dangerVar =
+    VariantBuilder Dngr
+
+
+{-| The "plain" button variant.
+-}
+plainVar : VariantBuilder msg
+plainVar =
+    VariantBuilder Pln
+
+
+{-| The "control" button variant.
+-}
+controlVar : VariantBuilder msg
+controlVar =
+    VariantBuilder Ctrl
+
+
+{-| The "link" button variant.
+-}
+linkVar : VariantBuilder msg
+linkVar =
+    VariantBuilder <| Lnk { isDanger = False, isInline = False }
+
+
+{-| Choose whether or to use a "danger" styling. This is different to
+the `danger` variant - the default danger styling only affects the
+`secondary` and `inline` variants, by changing the outline (of
+`secondary`) and the text colour to red.
+-}
+withDangerVar : Bool -> VariantBuilder msg -> VariantBuilder msg
+withDangerVar bool ((VariantBuilder opts) as builder) =
+    case opts of
+        Sec _ ->
+            VariantBuilder (Sec { isDanger = bool })
+
+        Lnk linkopts ->
+            VariantBuilder (Lnk { linkopts | isDanger = bool })
+
+        _ ->
+            builder
+
+
+{-| Choose whether to use the "inline" styling. This only applies to
+`link` variants.
+-}
+withInlineVar : Bool -> VariantBuilder msg -> VariantBuilder msg
+withInlineVar bool ((VariantBuilder opts) as builder) =
+    case opts of
+        Lnk linkopts ->
+            VariantBuilder <| Lnk { linkopts | isInline = bool }
+
+        _ ->
+            builder
+
+
+
+-- * Internal
+
+
+{-| Internal - don't use
+-}
+variantToTuple : VariantBuilder msg -> List ( String, Bool )
+variantToTuple (VariantBuilder varopts) =
+    case varopts of
+        Pri ->
+            [ ( "pf-m-primary", True ) ]
+
+        Sec { isDanger } ->
+            [ ( "pf-m-secondary", True ), isDangerToTuple isDanger ]
+
+        Ter ->
+            [ ( "pf-m-tertiary", True ) ]
+
+        Warn ->
+            [ ( "pf-m-warning", True ) ]
+
+        Dngr ->
+            [ ( "pf-m-danger", True ) ]
+
+        Pln ->
+            [ ( "pf-m-plain", True ) ]
+
+        Ctrl ->
+            [ ( "pf-m-control", True ) ]
+
+        Lnk { isDanger, isInline } ->
+            [ ( "pf-m-link", True ), isDangerToTuple isDanger, isInlineToTuple isInline ]
+
+
+isDangerToTuple : Bool -> ( String, Bool )
+isDangerToTuple isDanger =
+    if isDanger then
+        ( " pf-m-danger", isDanger )
+
+    else
+        ( "", isDanger )
+
+
+isInlineToTuple : Bool -> ( String, Bool )
+isInlineToTuple isInline =
+    if isInline then
+        ( "pf-m-inline", isInline )
+
+    else
+        ( "", isInline )
+
+
+
+-- * Handy things
+
+
+{-| This is an enumeration of the possible Button Variants. Combine it
+with `variantToBuilder` to change a button's variant at runtime.
+-}
+type Variant
+    = Primary
+    | Secondary
+    | Tertiary
+    | Warning
+    | Danger
+    | Plain
+    | Control
+    | Link
+
+
 {-| A Button Builder with `primary` styling.
 -}
 primary : Builder msg
 primary =
-    Builder { defaultOptions | variant = Variant.primary }
+    Builder { defaultOptions | variant = primaryVar }
 
 
 {-| A Button Builder with `secondary` styling.
 -}
 secondary : Builder msg
 secondary =
-    Builder { defaultOptions | variant = Variant.secondary }
+    Builder { defaultOptions | variant = secondaryVar }
 
 
 {-| A Button Builder with `tertiary` styling.
 -}
 tertiary : Builder msg
 tertiary =
-    Builder { defaultOptions | variant = Variant.tertiary }
+    Builder { defaultOptions | variant = tertiaryVar }
 
 
 {-| A Button Builder with `warning` styling.
 -}
 warning : Builder msg
 warning =
-    Builder { defaultOptions | variant = Variant.warning }
+    Builder { defaultOptions | variant = warningVar }
 
 
 {-| A Button Builder with `danger` styling.
 -}
 danger : Builder msg
 danger =
-    Builder { defaultOptions | variant = Variant.danger }
+    Builder { defaultOptions | variant = dangerVar }
 
 
 {-| A Button Builder with `plain` styling.
 -}
 plain : Builder msg
 plain =
-    Builder { defaultOptions | variant = Variant.plain }
+    Builder { defaultOptions | variant = plainVar }
 
 
 {-| A Button Builder with `control` styling.
 -}
 control : Builder msg
 control =
-    Builder { defaultOptions | variant = Variant.control }
+    Builder { defaultOptions | variant = controlVar }
 
 
 {-| A Button Builder with `link` styling.
 -}
 link : Builder msg
 link =
-    Builder { defaultOptions | variant = Variant.link }
+    Builder { defaultOptions | variant = linkVar }
 
 
 {-| Choose whether or to use a "danger" styling. This is different to
@@ -233,45 +413,45 @@ the `danger` variant - the default danger styling only affects the
 -}
 withDanger : Bool -> Builder msg -> Builder msg
 withDanger bool (Builder opts) =
-    Builder { opts | variant = Variant.withDanger bool opts.variant }
+    Builder { opts | variant = withDangerVar bool opts.variant }
 
 
 {-| Choose whether to use the "inline" styling. This only applies to
 `link` variants, and changes the component to `span`.
 -}
 withInline : Bool -> Builder msg -> Builder msg
-withInline bool ((Builder opts) as builder) =
-    Builder { opts | variant = Variant.withInline bool opts.variant, component = H.span }
+withInline bool (Builder opts) =
+    Builder { opts | variant = withInlineVar bool opts.variant, component = H.span }
 
 
 {-| Convert a Button Variant into a Button Builder of the
 corresponding style.
 -}
-variantToBuilder : Variant.Variant -> Builder msg
+variantToBuilder : Variant -> Builder msg
 variantToBuilder var =
     case var of
-        Variant.Primary ->
+        Primary ->
             primary
 
-        Variant.Secondary ->
+        Secondary ->
             secondary
 
-        Variant.Tertiary ->
+        Tertiary ->
             tertiary
 
-        Variant.Warning ->
+        Warning ->
             warning
 
-        Variant.Danger ->
+        Danger ->
             danger
 
-        Variant.Plain ->
+        Plain ->
             plain
 
-        Variant.Control ->
+        Control ->
             control
 
-        Variant.Link ->
+        Link ->
             link
 
 
@@ -329,16 +509,42 @@ withButtonType btnType (Builder opt) =
 
 
 
--- * TODO Icon
+-- * Icon
 
 
-type Position
+{-| The icon position on the Button. Should the icon be on the left or
+the right of the child?
+-}
+type IconPosition
     = Left
     | Right
 
 
-type alias Icon msg =
-    { icon : Html msg, position : Position }
+type alias IconOptions msg =
+    { icon : H.Html msg
+    , position : IconPosition
+    }
+
+
+{-| Add an icon, or general HTML element, to the given Button Builder.
+-}
+withIcon : Html msg -> Builder msg -> Builder msg
+withIcon html ((Builder opts) as builder) =
+    case opts.variant of
+        VariantBuilder Pln ->
+            builder
+
+        _ ->
+            Builder { opts | icon = Just { icon = html, position = Left } }
+
+
+{-| Change the position of an existing icon on a Button Builder. Note
+that for this function to have any affect, it must be called after
+`withIcon` in the builder pipeline.
+-}
+withIconPosition : IconPosition -> Builder msg -> Builder msg
+withIconPosition pos (Builder opts) =
+    Builder { opts | icon = Maybe.map (\{ icon } -> { icon = icon, position = pos }) opts.icon }
 
 
 
@@ -482,7 +688,7 @@ withComponent comp (Builder opts) =
 
 {-| The pipeline builder for the Badge count. Don't use this pipeline
 function if you don't ever want a badge count on this Button,
-otherwise, pass in the appropriate BadgeCountObject.
+otherwise, pass in the appropriate BadgeCountObject as the first Builder.
 -}
 withBadgeCount : BadgeCount.Builder msg -> Builder msg -> Builder msg
 withBadgeCount badgeCountBuilder (Builder opts) =
@@ -520,13 +726,6 @@ using `ButtonSize`.
 withButtonSize : ButtonSize -> Builder msg -> Builder msg
 withButtonSize size (Builder opt) =
     Builder { opt | size = Just size }
-
-
-{-| Apply the given variant to the Button Builder.
--}
-withVariant : Variant.Builder msg -> Builder msg -> Builder msg
-withVariant varopts (Builder opts) =
-    Builder { opts | variant = varopts }
 
 
 
@@ -568,11 +767,46 @@ setChildren htmls (Builder opts) =
 
 
 
--- * Building
+-- * ToHtml
 
 
-toClass : Builder msg -> List ( String, Bool )
-toClass (Builder opts) =
+makeChildren : Builder msg -> List (Html msg)
+makeChildren (Builder opts) =
+    let
+        isLoading =
+            isLoadingChildren opts.isLoading
+
+        buttonCount =
+            case opts.countOptions of
+                Just countOpts ->
+                    BadgeCount.toHtml countOpts
+
+                Nothing ->
+                    []
+
+        children =
+            opts.children
+
+        ( leftIcon, rightIcon ) =
+            case opts.icon of
+                Just { icon, position } ->
+                    case position of
+                        Left ->
+                            ( [ H.span [ class "pf-c-button__icon", class "pf-m-start" ] [ icon ] ]
+                            , []
+                            )
+
+                        Right ->
+                            ( [], [ H.span [ class "pf-c-button__icon", class "pf-m-end" ] [ icon ] ] )
+
+                Nothing ->
+                    ( [], [] )
+    in
+    isLoading ++ leftIcon ++ children ++ rightIcon ++ buttonCount
+
+
+toClasses : Builder msg -> List ( String, Bool )
+toClasses (Builder opts) =
     let
         pfButton =
             ( "pf-c-button", True )
@@ -603,7 +837,7 @@ toClass (Builder opts) =
                     buttonSizeToTuple btnSize
 
         variant =
-            Variant.variantToTuple opts.variant
+            variantToTuple opts.variant
     in
     [ pfButton, isActive, isBlock, isLoading, size, className ] ++ variant
 
@@ -620,27 +854,11 @@ toAttributes (Builder opts) =
     [ btnType, isDisabledAttr ] ++ opts.attributes
 
 
-makeChildren : Builder msg -> List (Html msg)
-makeChildren (Builder opts) =
-    isLoadingChildren opts.isLoading
-        ++ (case opts.countOptions of
-                Just countOpts ->
-                    opts.children ++ BadgeCount.toHtml countOpts
-
-                Nothing ->
-                    opts.children
-           )
-
-
-
--- * ToHtml
-
-
 {-| This function turns a Builder into a HTML component. Put this at
 the end of your pipeline to get a useable button.
 -}
 toHtml : Builder msg -> Html msg
 toHtml ((Builder opts) as builder) =
     opts.component
-        ((classList <| toClass builder) :: toAttributes builder)
+        ((classList <| toClasses builder) :: toAttributes builder)
         (makeChildren builder)
